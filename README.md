@@ -53,7 +53,7 @@ npm run dev
 - Keyboard shortcuts (Space to flip, arrow keys to navigate)
 - Mobile responsive
 
-### Contributing
+## Contributing
 
 Contributions are welcome!
 
@@ -62,6 +62,6 @@ If you would like to contribute, feel free to:
 - Open pull requests for new flashcard content, new CS topics, bug fixes or anything else.
 - Report issues on GitHub.
 
-### License
+## License
 
 This project is licensed under the MIT License.
