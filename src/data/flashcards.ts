@@ -6,7 +6,7 @@ export const topics: Topic[] = [
     name: "Big-O / Complexity",
     icon: "📐",
     description: "Algorithmic complexity and asymptotic analysis",
-    cardCount: 0,
+    cardCount: 43,
   },
   {
     id: "arrays",
@@ -236,6 +236,533 @@ export const flashcards: Flashcard[] = [
     if n <= 1:
         return 0
     return 1 + mystery(n // 2)`,
+    language: "python",
+  },
+
+  // ─── BIG-O TRICKY CASES (CtCI Ch. VI) ────────────────────────
+  {
+    id: "bo-11",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "In industry, Big O is used as a tight bound. What academic term does this actually correspond to?",
+    answer:
+      "Big Theta (Θ). Academically, Big O is just an upper bound — O(N²) is technically valid for a linear algorithm. But in industry interviews, saying O(N²) for a linear algorithm is considered incorrect. Industry uses Big O the way academics use Θ: the tightest accurate description.",
+  },
+  {
+    id: "bo-12",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "What is the difference between best/worst/expected case and Big O / Ω / Θ?",
+    answer:
+      "They are completely separate concepts, often confused:\n\n• Best/Worst/Expected case describe the runtime for specific input scenarios.\n• Big O / Ω / Θ describe upper, lower, and tight bounds on the runtime.\n\nQuicksort: worst case is O(N²), expected case is O(N log N). Both describe the tight bound (Θ) for their respective scenario. There is no direct relationship between the two sets.",
+  },
+  {
+    id: "bo-13",
+    topic: "big-o",
+    difficulty: "intermediate",
+    question: "Two sequential (non-nested) loops each iterate over the same array of N elements. What is the time complexity?",
+    answer:
+      "O(N) — not O(2N). Constants are dropped. Even though you iterate twice, the rate of growth is still linear. O(2N) and O(N) describe the same complexity.",
+    codeSnippet: `def foo(array):
+    total = 0
+    for x in array:   # O(n)
+        total += x
+    product = 1
+    for x in array:   # O(n) again
+        product *= x
+    # Total: O(n) + O(n) = O(2n) = O(n)`,
+    language: "python",
+  },
+  {
+    id: "bo-14",
+    topic: "big-o",
+    difficulty: "intermediate",
+    question: "Simplify these by dropping non-dominant terms:\n• O(N² + N)\n• O(N + log N)\n• O(5·2ᴺ + 1000·N¹⁰⁰)",
+    answer:
+      "• O(N² + N)         → O(N²)\n• O(N + log N)      → O(N)\n• O(5·2ᴺ + 1000·N¹⁰⁰) → O(2ᴺ)\n\nThe dominant term wins. Drop everything else including constants. Note: O(B² + A) cannot be reduced without knowing the relationship between A and B.",
+  },
+  {
+    id: "bo-15",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "When do you ADD runtimes vs MULTIPLY runtimes for a two-step algorithm?",
+    answer:
+      "ADD → sequential steps: 'do A, then when done, do B' → O(A + B)\nMULTIPLY → nested steps: 'do B for each step of A' → O(A × B)\n\nRule of thumb:\n• Two separate loops → add\n• One loop inside another → multiply",
+    codeSnippet: `# ADD: O(a + b)
+for a in arr_a:
+    print(a)
+for b in arr_b:
+    print(b)
+
+# MULTIPLY: O(a * b)
+for a in arr_a:
+    for b in arr_b:
+        print(a, b)`,
+    language: "python",
+  },
+  {
+    id: "bo-16",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "The inner loop starts at i + 1. Is this O(N²) or O(N²/2)?",
+    answer:
+      "O(N²). Even though j starts at i+1 (roughly half the work), you still drop the constant 1/2.\n\nThe total iterations = (N-1)+(N-2)+...+1 = N(N-1)/2 ≈ N²/2 → O(N²).\n\nThink of it as the upper triangle of an N×N matrix — still quadratic.",
+    codeSnippet: `def print_unordered_pairs(array):
+    n = len(array)
+    for i in range(n):
+        for j in range(i + 1, n):   # j starts at i+1
+            print(array[i], array[j])
+# Still O(n²) — the /2 constant is dropped`,
+    language: "python",
+  },
+  {
+    id: "bo-17",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "What is the runtime of this nested loop over TWO DIFFERENT arrays A and B? (Common mistake!)",
+    answer:
+      "O(a·b) — NOT O(N²). There are two separate inputs. Never say O(N²) when the loops iterate over different collections — both sizes matter independently. This is an extremely common interview mistake.",
+    codeSnippet: `def print_pairs(array_a, array_b):
+    for a in array_a:
+        for b in array_b:
+            if a < b:
+                print(a, b)
+# a = len(array_a), b = len(array_b)
+# Runtime: O(a * b), NOT O(n²)`,
+    language: "python",
+  },
+  {
+    id: "bo-18",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "An innermost loop runs a fixed 100,000 times inside nested loops over arrays A and B. What is the runtime?",
+    answer:
+      "O(a·b) — unchanged. 100,000 is a constant and constants are always dropped. The runtime is still driven by how A and B grow, not by the fixed constant inner iteration.",
+    codeSnippet: `def example(array_a, array_b):
+    for a in array_a:
+        for b in array_b:
+            for k in range(100_000):   # fixed constant
+                print(a, b)
+# O(100000 * a * b) = O(a * b)`,
+    language: "python",
+  },
+  {
+    id: "bo-19",
+    topic: "big-o",
+    difficulty: "intermediate",
+    question: "A reverse function only loops through the first N/2 elements. What is the time complexity?",
+    answer:
+      "O(N). Looping through N/2 is still linear — the constant 1/2 is dropped. Big O describes the growth rate, and N/2 grows at the same rate as N.",
+    codeSnippet: `def reverse(array):
+    n = len(array)
+    for i in range(n // 2):          # only n/2 iterations
+        other = n - i - 1
+        array[i], array[other] = array[other], array[i]
+# O(n/2) = O(n)`,
+    language: "python",
+  },
+  {
+    id: "bo-20",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "Which of these are equivalent to O(N)? Why?\n• O(N + P) where P < N/2\n• O(2N)\n• O(N + log N)\n• O(N + M)",
+    answer:
+      "• O(N + P) where P < N/2 → O(N): P is dominated by N, drop it.\n• O(2N) → O(N): drop the constant.\n• O(N + log N) → O(N): log N grows slower than N, drop it.\n• O(N + M) → NOT reducible: M and N are independent. Without knowing their relationship, both terms must stay.",
+  },
+  {
+    id: "bo-21",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "What is the amortized time complexity of inserting into a dynamic array (list), and how is it derived?",
+    answer:
+      "O(1) amortized. Most inserts are O(1). Doubling occurs at sizes 1, 2, 4, 8, ..., X — copying 1+2+4+...+X ≈ 2X elements total.\n\nX insertions cost ~2X total copy work → 2X/X = 2 → amortized O(1) per insertion.\n\nWorst case for a single insert is O(N), but that cost is spread over all prior inserts.",
+  },
+  {
+    id: "bo-22",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "Where does O(log N) come from? What pattern produces it?",
+    answer:
+      "O(log N) appears when the problem space is halved at each step.\n\nBinary search: N → N/2 → N/4 → ... → 1.\nHow many halvings? 2^k = N → k = log₂N.\n\nKey signal: if you see 'divide the input in half each iteration', it's O(log N).\nAlso applies to: balanced BST lookups, any divide-and-conquer splitting in half.",
+    codeSnippet: `def binary_search(arr, target):
+    lo, hi = 0, len(arr) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            lo = mid + 1    # half discarded
+        else:
+            hi = mid - 1    # half discarded
+    return -1
+# O(log n) — search space halves each step`,
+    language: "python",
+  },
+  {
+    id: "bo-23",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "Does the base of a logarithm matter in Big O? What about the base of an exponent?",
+    answer:
+      "Logarithm base: does NOT matter.\nlog_a(N) and log_b(N) differ only by a constant factor (change-of-base), so both are O(log N).\n\nExponent base: DOES matter.\n2ⁿ ≠ 8ⁿ — they differ by a factor of (2²)ⁿ = 4ⁿ, which is exponential, not constant.\n\nBottom line: log base is irrelevant; exponent base is critical.",
+  },
+  {
+    id: "bo-24",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "What is the time complexity of this recursive function? Most people say O(N²) — why is that wrong?",
+    answer:
+      "O(2ᴺ) — NOT O(N²). Each call spawns 2 more calls, forming a binary tree of depth N.\n\nTotal nodes = 2⁰ + 2¹ + ... + 2ᴺ = 2^(N+1) - 1 = O(2ᴺ).\n\nPattern to remember: O(branches^depth). Here branches=2, depth=N → O(2ᴺ).",
+    codeSnippet: `def f(n):
+    if n <= 1:
+        return 1
+    return f(n - 1) + f(n - 1)
+# Two branches per call, depth N
+# → O(2^n), NOT O(n²)`,
+    language: "python",
+  },
+  {
+    id: "bo-25",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "f(n) has O(2ᴺ) time complexity. What is its SPACE complexity?",
+    answer:
+      "O(N) space — not O(2ᴺ). Although 2ᴺ total calls exist across the entire recursion tree, only O(N) calls exist on the call stack at any given moment (one path from root to leaf).\n\nSpace complexity tracks simultaneous memory usage, not total operations ever performed.",
+    codeSnippet: `def f(n):
+    if n <= 1:
+        return 1
+    return f(n - 1) + f(n - 1)
+
+# Call stack at any moment (n=4):
+# f(4) -> f(3) -> f(2) -> f(1)
+# Only 4 frames deep = O(n) space`,
+    language: "python",
+  },
+  {
+    id: "bo-26",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "This function calls pair_sum O(N) times. Is its space complexity O(N) or O(1)?",
+    answer:
+      "O(1) space — NOT O(N). The N calls to pair_sum do NOT exist simultaneously on the call stack. Each call completes before the next one starts (sequential loop, not recursion). At any moment, only one pair_sum frame is alive.\n\nKey: space complexity counts simultaneous frames, not total calls ever made.",
+    codeSnippet: `def pair_sum_sequence(n):
+    total = 0
+    for i in range(n):
+        total += pair_sum(i, i + 1)  # each call finishes
+    return total                     # before next begins
+
+def pair_sum(a, b):
+    return a + b
+# O(n) time, O(1) space`,
+    language: "python",
+  },
+
+  // ─── BIG-O EXAMPLES FROM CtCI CH. VI (Ex. 8–16 + Problems) ──
+  {
+    id: "bo-27",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "An algorithm sorts each string in an array, then sorts the full array. What is the runtime? (Watch out for the variable naming trap.)",
+    answer:
+      "O(a·s·log s + a·s·log a), where s = length of the longest string, a = number of strings.\n\nThe trap: using 'N' for both. Breaking it down:\n• Sort each string: O(s log s) per string × a strings = O(a·s·log s)\n• Sort the array: O(a log a) comparisons, each comparing two strings costs O(s) → O(a·s·log a)\n• Total: O(a·s·(log s + log a))\n\nNever reuse 'N' when two inputs have different meanings.",
+    codeSnippet: `def sort_strings_then_array(arr):
+    # Sort each individual string
+    sorted_arr = [''.join(sorted(s)) for s in arr]
+    # Then sort the list of strings
+    sorted_arr.sort()
+    return sorted_arr
+# s = max string length, a = len(arr)
+# O(a*s*log(s) + a*s*log(a)) = O(a*s*(log s + log a))`,
+    language: "python",
+  },
+  {
+    id: "bo-28",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "This function sums all nodes in a balanced BST. Many say O(log N) because it's a BST. What is the actual runtime and why?",
+    answer:
+      "O(N) — it touches every node exactly once with O(1) work each.\n\nUsing the recursive pattern O(branches^depth): branches=2, depth=log N → O(2^log N) = O(N).\n\nProof that 2^log₂(N) = N:\nLet P = 2^log₂(N) → log₂(P) = log₂(N) → P = N.\n\nKey: 'BST' does not automatically mean O(log N). That only applies to search/insert, not full traversals.",
+    codeSnippet: `def tree_sum(node):
+    if node is None:
+        return 0
+    return tree_sum(node.left) + node.val + tree_sum(node.right)
+# Visits every node once → O(n)
+# NOT O(log n) just because it's a BST`,
+    language: "python",
+  },
+  {
+    id: "bo-29",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "What is the runtime of this isPrime function, and why does the loop stop at √n?",
+    answer:
+      "O(√N). The loop condition is x*x <= n, which is equivalent to x <= √n.\n\nWhy √n is enough: if n is divisible by a number greater than √n, there must be a corresponding divisor smaller than √n that would have been caught already. So checking up to √n is sufficient.\n\nExample: 33 = 3 × 11. √33 ≈ 5.7. We catch divisor 3 before reaching 11.",
+    codeSnippet: `def is_prime(n):
+    x = 2
+    while x * x <= n:   # equivalent to x <= sqrt(n)
+        if n % x == 0:
+            return False
+        x += 1
+    return True
+# Loop runs √n times → O(√n)`,
+    language: "python",
+  },
+  {
+    id: "bo-30",
+    topic: "big-o",
+    difficulty: "intermediate",
+    question: "What is the time and space complexity of this recursive factorial?",
+    answer:
+      "Time: O(N) — straight recursion from n down to 1, one call per level.\nSpace: O(N) — N stack frames exist simultaneously (n, n-1, n-2, ..., 1).\n\nThis is one of the simplest recursive runtimes. Each call does O(1) work and there are exactly N calls.",
+    codeSnippet: `def factorial(n):
+    if n < 0:
+        return -1
+    elif n == 0:
+        return 1
+    else:
+        return n * factorial(n - 1)
+# O(n) time, O(n) space (call stack)`,
+    language: "python",
+  },
+  {
+    id: "bo-31",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "This code generates all permutations of a string. What is its runtime?",
+    answer:
+      "O(n²·n!) as an upper bound.\n\n• There are n! permutations (base case hits n! times).\n• The call tree has at most n × n! nodes total.\n• Each call does O(n) work (string slicing/concatenation).\n• Total: O(n) × O(n × n!) = O(n²·n!).\n\nThis is correct though not perfectly tight — the actual runtime is closer to O(n·n!) but O(n²·n!) is an acceptable upper bound for interviews.",
+    codeSnippet: `def permutation(s, prefix=""):
+    if len(s) == 0:
+        print(prefix)
+    else:
+        for i in range(len(s)):
+            rem = s[:i] + s[i+1:]          # O(n) work
+            permutation(rem, prefix + s[i]) # O(n) concat
+# n! leaves, each path length n → O(n * n!) nodes
+# O(n) work per node → O(n² * n!) total`,
+    language: "python",
+  },
+  {
+    id: "bo-32",
+    topic: "big-o",
+    difficulty: "intermediate",
+    question: "What is the runtime of the naive recursive Fibonacci? And what is the tighter (but harder to prove) bound?",
+    answer:
+      "O(2ᴺ) using the branches^depth pattern: 2 branches per call, depth N.\n\nTighter bound (bonus): O(1.6ᴺ). Because many nodes near the bottom make only one recursive call (not two), the actual branching factor is less than 2. O(2ᴺ) is still correct and expected in interviews.\n\nGeneral rule: multiple recursive calls → exponential runtime.",
+    codeSnippet: `def fib(n):
+    if n <= 0: return 0
+    if n == 1: return 1
+    return fib(n - 1) + fib(n - 2)
+# 2 branches per call, depth n
+# O(branches^depth) = O(2^n)`,
+    language: "python",
+  },
+  {
+    id: "bo-33",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "This prints all Fibonacci numbers by calling fib(i) each time. Many say O(N·2ᴺ). What is the actual runtime?",
+    answer:
+      "O(2ᴺ) — not O(N·2ᴺ). The mistake: assuming fib(i) always costs O(2ⁿ) regardless of i.\n\nActual work per call:\nfib(1)→2¹, fib(2)→2², ..., fib(n)→2ⁿ\n\nTotal: 2¹+2²+...+2ⁿ = 2^(n+1) - 2 = O(2ᴺ).\n\nThe sum of a geometric series 2¹+...+2ⁿ is dominated by its last term 2ⁿ.",
+    codeSnippet: `def all_fib(n):
+    for i in range(n):
+        print(f"{i}: {fib(i)}")   # fib(i) costs O(2^i)
+
+def fib(n):
+    if n <= 0: return 0
+    if n == 1: return 1
+    return fib(n-1) + fib(n-2)
+
+# Total: 2^1 + 2^2 + ... + 2^n = O(2^n)
+# NOT O(n * 2^n)`,
+    language: "python",
+  },
+  {
+    id: "bo-34",
+    topic: "big-o",
+    difficulty: "intermediate",
+    question: "Same all_fib, but now with memoization. What is the runtime?",
+    answer:
+      "O(N). With memoization, each fib(i) value is computed exactly once and cached. Subsequent lookups are O(1).\n\nWe do constant work N times → O(N).\n\nThis is the classic example of how memoization converts O(2ᴺ) exponential time into O(N) linear time — a fundamental technique in dynamic programming.",
+    codeSnippet: `def all_fib_memo(n):
+    memo = {}
+    for i in range(n):
+        print(f"{i}: {fib(i, memo)}")
+
+def fib(n, memo):
+    if n <= 0: return 0
+    if n == 1: return 1
+    if n in memo: return memo[n]   # O(1) lookup
+    memo[n] = fib(n-1, memo) + fib(n-2, memo)
+    return memo[n]
+# Each value computed once → O(n)`,
+    language: "python",
+  },
+  {
+    id: "bo-35",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "This prints all powers of 2 from 1 through n by halving recursively. What is the runtime — and give THREE ways to derive it.",
+    answer:
+      "O(log N). Three derivations:\n\n1. What it does: prints log N values (there are log N powers of 2 between 1 and N).\n\n2. Halvings: each call halves n until reaching 1 → log N halvings.\n\n3. Rate of increase: the number of calls only grows by 1 each time n doubles. If 2ˣ = n, then x = log N calls total.",
+    codeSnippet: `def powers_of_2(n):
+    if n < 1:
+        return 0
+    elif n == 1:
+        print(1)
+        return 1
+    else:
+        prev = powers_of_2(n // 2)  # halves each time
+        curr = prev * 2
+        print(curr)
+        return curr
+# Halves n each call → O(log n)`,
+    language: "python",
+  },
+  {
+    id: "bo-36",
+    topic: "big-o",
+    difficulty: "intermediate",
+    question: "What are the runtimes of product(a, b) and power(a, b)?",
+    answer:
+      "product(a, b): O(b) — the loop adds `a` to itself b times.\n\npower(a, b): O(b) — the recursion decrements b by 1 each call, so it makes b recursive calls.",
+    codeSnippet: `def product(a, b):
+    total = 0
+    for _ in range(b):   # loops b times
+        total += a
+    return total
+# O(b)
+
+def power(a, b):
+    if b < 0:  return 0     # error
+    if b == 0: return 1
+    return a * power(a, b - 1)  # b recursive calls
+# O(b)`,
+    language: "python",
+  },
+  {
+    id: "bo-37",
+    topic: "big-o",
+    difficulty: "intermediate",
+    question: "What are the runtimes of mod(a, b) and div(a, b)?",
+    answer:
+      "mod(a, b): O(1) — it's just arithmetic, no loops.\n\ndiv(a, b): O(a/b) — the while loop adds b to sum until sum > a. It takes ⌊a/b⌋ iterations.",
+    codeSnippet: `def mod(a, b):
+    if b <= 0: return -1
+    div = a // b
+    return a - div * b   # O(1), pure arithmetic
+
+def div(a, b):
+    count, total = 0, b
+    while total <= a:    # iterates a/b times
+        total += b
+        count += 1
+    return count
+# O(a/b)`,
+    language: "python",
+  },
+  {
+    id: "bo-38",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "Two sqrt implementations: one uses binary search, one scans linearly. What are their runtimes?",
+    answer:
+      "Binary search sqrt: O(log N) — each step halves the search range [min, max].\n\nLinear scan sqrt: O(√N) — the loop stops when guess × guess > n, i.e., when guess > √n.\n\nKey: a loop condition of `x * x <= n` always signals O(√N) runtime.",
+    codeSnippet: `def sqrt_binary(n):              # O(log n)
+    lo, hi = 1, n
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if mid * mid == n: return mid
+        elif mid * mid < n: lo = mid + 1
+        else: hi = mid - 1
+    return -1
+
+def sqrt_linear(n):              # O(sqrt(n))
+    guess = 1
+    while guess * guess <= n:    # stops at sqrt(n)
+        if guess * guess == n: return guess
+        guess += 1
+    return -1`,
+    language: "python",
+  },
+  {
+    id: "bo-39",
+    topic: "big-o",
+    difficulty: "intermediate",
+    question: "What is the worst-case runtime for finding an element in: (a) an unbalanced BST, and (b) an unsorted binary tree?",
+    answer:
+      "a) Unbalanced BST: O(N). In the worst case the tree degenerates into a linked list (each node has only a right child), so you traverse all N nodes.\n\nb) Unsorted binary tree: O(N). Without any ordering property there's no shortcut — you may have to search every node.",
+  },
+  {
+    id: "bo-40",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "copyArray calls appendToNew for each element. appendToNew creates a brand-new array each time. What is the total runtime?",
+    answer:
+      "O(N²). Each call to appendToNew copies all existing elements into a new array:\n• 1st element: 1 copy\n• 2nd element: 2 copies\n• ...\n• Nth element: N copies\n\nTotal: 1+2+3+...+N = N(N+1)/2 = O(N²).\n\nThis is why mutating a copy-on-append array is expensive. Use a list/dynamic array instead.",
+    codeSnippet: `def copy_array(arr):
+    copy = []
+    for val in arr:
+        copy = append_to_new(copy, val)  # new array each time!
+    return copy
+
+def append_to_new(arr, val):
+    bigger = arr + [val]   # copies all elements
+    return bigger
+# 1+2+3+...+n copies → O(n²)`,
+    language: "python",
+  },
+  {
+    id: "bo-41",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "This sums the digits of a number n using a loop. What is the runtime in terms of n?",
+    answer:
+      "O(log N). The loop divides n by 10 each iteration until n becomes 0.\n\nThe number of iterations equals the number of digits in n. A number with d digits satisfies n < 10^d, so d = log₁₀(n).\n\nKey insight: summing digits is really iterating over the digits, and a number has log₁₀(N) digits.",
+    codeSnippet: `def sum_digits(n):
+    total = 0
+    while n > 0:
+        total += n % 10   # get last digit
+        n //= 10          # drop last digit
+    return total
+# Divides by 10 each step
+# Number of steps = digits in n = log₁₀(n) = O(log n)`,
+    language: "python",
+  },
+  {
+    id: "bo-42",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "This generates all strings of length k using c=26 characters, then checks if each is sorted. What is the runtime?",
+    answer:
+      "O(k·cᵏ).\n\n• There are cᵏ total strings of length k (c choices per slot, k slots).\n• Generating each: O(cᵏ) calls × O(k) string work = O(k·cᵏ).\n• Checking isInOrder for each: O(k) per string × cᵏ strings = O(k·cᵏ).\n\nTotal: O(k·cᵏ). The exponential is in k (string length), not n.",
+    codeSnippet: `def print_sorted_strings(remaining, prefix=""):
+    if remaining == 0:
+        if is_in_order(prefix):     # O(k) check
+            print(prefix)
+    else:
+        for c in range(26):         # 26 branches
+            print_sorted_strings(remaining - 1, prefix + chr(ord('a') + c))
+
+# 26^k leaves, depth k → O(26^k) nodes, O(k) work each
+# Total: O(k * 26^k) = O(k * c^k)`,
+    language: "python",
+  },
+  {
+    id: "bo-43",
+    topic: "big-o",
+    difficulty: "advanced",
+    question: "Find intersection of arrays a and b: sort b with mergesort, then binary-search each element of a in b. What is the runtime?",
+    answer:
+      "O(b log b + a log b).\n\n• Sort b: O(b log b)\n• For each of the a elements in array a, binary search in b: O(log b) each → O(a log b)\n• Total: O(b log b + a log b)\n\nIf a ≈ b this simplifies to O(n log n), but keep both variables if sizes differ.",
+    codeSnippet: `def intersection(a, b):
+    b_sorted = sorted(b)          # O(b log b)
+    count = 0
+    for x in a:                   # O(a) iterations
+        if binary_search(b_sorted, x) >= 0:  # O(log b) each
+            count += 1
+    return count
+# O(b log b) + O(a log b) = O(b log b + a log b)`,
     language: "python",
   },
 
