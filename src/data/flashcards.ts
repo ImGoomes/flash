@@ -3641,6 +3641,126 @@ def reverse_string(s):
     answer:
       "slice(start, end): returns chars from start to end (not inclusive). Supports negative indices.\nsubstring(start, end): similar to slice but swaps args if start > end, no negative indices.\nsubstr(start, length): deprecated. Returns chars from start for given length.\n\nPrefer .slice() — it's the most versatile and consistent.",
   },
+
+  // ─── ARRAYS ───────────────────────────────────────────────────
+  {
+    id: "arr-1",
+    topic: "arrays",
+    difficulty: "beginner",
+    question: "What type of memory does an array use, and why?",
+    answer:
+      "Arrays use contiguous (sequential) memory. All elements are stored back-to-back in RAM.\n\nWhy: This allows O(1) index access — given the base address and element size, any element's address is computed instantly as: address = base + (index × element_size).\n\nThe trade-off: inserting or removing elements requires shifting everything after the target index, making those operations O(n).",
+  },
+  {
+    id: "arr-2",
+    topic: "arrays",
+    difficulty: "intermediate",
+    question: "What is the Big O trade-off between read, insert, and remove in an array?",
+    answer:
+      "Read (by index):   O(1) — direct memory address calculation.\nRead (by value):   O(n) — must scan elements until found.\n\nInsert at end:     O(1) amortized — just append (dynamic arrays resize occasionally).\nInsert at middle:  O(n) — must shift all elements after the insertion point.\n\nRemove at end:     O(1) — just decrement the length.\nRemove at middle:  O(n) — must shift all elements after the removed index.\n\nSummary: arrays are fast to read by index, but slow to insert or remove anywhere except the end.",
+  },
+  {
+    id: "arr-3",
+    topic: "arrays",
+    difficulty: "intermediate",
+    question: "What should arrays be used for, and what should they NOT be used for?",
+    answer:
+      "USE arrays when:\n• You need fast O(1) random access by index.\n• The data size is mostly fixed or you only append/remove from the end.\n• You iterate over all elements frequently (cache-friendly due to contiguous memory).\n• You need simplicity — arrays are the most universally supported structure.\n\nAVOID arrays when:\n• You frequently insert or delete in the middle — prefer a linked list.\n• You need fast search by value — prefer a hash table.\n• The collection size changes dramatically and order doesn't matter — prefer a set or map.\n• You need a FIFO queue with frequent front-removals — prefer a deque or linked list.",
+  },
+
+  // ─── LINKED LISTS ─────────────────────────────────────────────
+  {
+    id: "ll-1",
+    topic: "linked-lists",
+    difficulty: "beginner",
+    question: "What type of memory does a linked list use, and why?",
+    answer:
+      "Linked lists use non-contiguous (scattered) memory. Each node is independently allocated anywhere in the heap and holds a pointer to the next node.\n\nWhy this matters:\n• Nodes don't need to be adjacent — insertions and deletions never require shifting.\n• But you lose random access — to reach index k you must traverse k nodes from the head: O(n).\n• Pointers add memory overhead (8 bytes per pointer on 64-bit systems).\n• Non-contiguous layout is cache-unfriendly compared to arrays.",
+  },
+  {
+    id: "ll-2",
+    topic: "linked-lists",
+    difficulty: "intermediate",
+    question: "What is the Big O trade-off between read, insert, and remove in a linked list?",
+    answer:
+      "Read by index:     O(n) — must traverse from head to reach position k.\nRead head/tail:    O(1) — if you keep head (and tail) pointers.\n\nInsert at head:    O(1) — rewire one pointer.\nInsert at tail:    O(1) — with a tail pointer; O(n) without.\nInsert at middle:  O(n) to find the position, then O(1) to rewire.\n\nRemove at head:    O(1) — move head pointer forward.\nRemove at tail:    O(n) singly linked (need to find new tail); O(1) doubly linked.\nRemove at middle:  O(n) to find the node, then O(1) to unlink.\n\nSummary: linked lists excel at O(1) head insertions/deletions but have O(n) random access.",
+  },
+  {
+    id: "ll-3",
+    topic: "linked-lists",
+    difficulty: "intermediate",
+    question: "What should linked lists be used for, and what should they NOT be used for?",
+    answer:
+      "USE linked lists when:\n• You need frequent O(1) insertions/deletions at the head (e.g., implementing a stack or queue).\n• You don't need random access by index.\n• The size is highly dynamic and unpredictable.\n• You're implementing LRU cache, adjacency lists, or undo history.\n\nAVOID linked lists when:\n• You need fast random access by index — use an array.\n• Memory is constrained — pointer overhead (8 bytes/node) adds up.\n• You iterate heavily and need cache efficiency — arrays are faster in practice.\n• You need to search by value frequently — hash tables are better.",
+  },
+
+  // ─── QUEUES ───────────────────────────────────────────────────
+  {
+    id: "q-1",
+    topic: "queues",
+    difficulty: "beginner",
+    question: "What type of memory does a queue use, and why?",
+    answer:
+      "A queue is an abstract data type (ADT) — its memory layout depends on the underlying implementation:\n\n• Linked list-backed: non-contiguous memory. Head pointer for dequeue (O(1)), tail pointer for enqueue (O(1)). No shifting needed.\n• Array-backed (circular buffer): contiguous memory. Uses head/tail indices that wrap around. Avoids shifting; O(1) enqueue and dequeue.\n\nThe circular array variant is more cache-friendly; the linked list variant handles unbounded growth more naturally.",
+  },
+  {
+    id: "q-2",
+    topic: "queues",
+    difficulty: "intermediate",
+    question: "What is the Big O trade-off between read, insert (enqueue), and remove (dequeue) in a queue?",
+    answer:
+      "Enqueue (add to back):   O(1) — append to tail (linked list) or advance tail index (circular array).\nDequeue (remove from front): O(1) — remove head node or advance head index.\n\nRead front/back:         O(1) — direct pointer or index access.\nRead by position:        O(n) — queues don't support random access; you'd have to dequeue to reach middle elements.\n\nSummary: queues guarantee O(1) enqueue and dequeue at the cost of no random access. If you need to peek inside the queue, a different structure is more appropriate.",
+  },
+  {
+    id: "q-3",
+    topic: "queues",
+    difficulty: "intermediate",
+    question: "What should queues be used for, and what should they NOT be used for?",
+    answer:
+      "USE queues when:\n• You need strict FIFO (first-in, first-out) ordering.\n• BFS (breadth-first search) — the frontier is naturally a queue.\n• Task scheduling, print spoolers, message buffers, request handling.\n• Rate limiting or producer-consumer pipelines.\n\nAVOID queues when:\n• You need LIFO (last-in, first-out) — use a stack.\n• You need random access or searching by value — use an array or hash table.\n• You need priority-based ordering — use a priority queue (heap) instead.\n• You need to remove from both ends efficiently with arbitrary access — use a deque.",
+  },
+  {
+    id: "q-4",
+    topic: "queues",
+    difficulty: "beginner",
+    question: "What data structures can be used to implement a queue?",
+    answer:
+      "Three common options:\n\n1. Linked List (most natural)\n   • Head pointer = front (dequeue in O(1)).\n   • Tail pointer = back (enqueue in O(1)).\n   • Unbounded; no resizing needed.\n\n2. Circular Array (most cache-friendly)\n   • Two indices (head, tail) that wrap around with modulo.\n   • Enqueue and dequeue are O(1) without shifting.\n   • Fixed capacity (or resize when full).\n\n3. Two Stacks (interview classic)\n   • Stack1 receives enqueues; Stack2 serves dequeues.\n   • When Stack2 is empty, flip all of Stack1 into it.\n   • Amortized O(1) per operation.\n\nAvoid a plain array with front-removal — shifting all elements on dequeue is O(n).",
+  },
+
+  // ─── STACKS ───────────────────────────────────────────────────
+  {
+    id: "stk-1",
+    topic: "stacks",
+    difficulty: "beginner",
+    question: "What type of memory does a stack use, and why?",
+    answer:
+      "A stack is an ADT — its memory depends on the implementation:\n\n• Array-backed: contiguous memory. Push/pop operate on the end of the array — O(1) amortized with no shifting. Simple and cache-friendly.\n• Linked list-backed: non-contiguous memory. Push/pop at the head — always O(1), no resizing needed.\n\nNote: the call stack in your OS/runtime is a fixed-size contiguous memory region. Application-level stacks (e.g., for DFS) are typically array-backed for performance.",
+  },
+  {
+    id: "stk-2",
+    topic: "stacks",
+    difficulty: "intermediate",
+    question: "What is the Big O trade-off between read, insert (push), and remove (pop) in a stack?",
+    answer:
+      "Push (insert on top): O(1) — append to array end or prepend to linked list.\nPop (remove from top): O(1) — remove from array end or unlink head.\n\nPeek (read top):      O(1) — direct access to top element without removing.\nRead by position:     O(n) — stacks don't support random access; must pop to reach deeper elements.\n\nSummary: stacks are O(1) for every core operation (push, pop, peek) but O(n) to access anything other than the top. This constraint is the whole point — it enforces LIFO discipline.",
+  },
+  {
+    id: "stk-3",
+    topic: "stacks",
+    difficulty: "intermediate",
+    question: "What should stacks be used for, and what should they NOT be used for?",
+    answer:
+      "USE stacks when:\n• You need LIFO (last-in, first-out) ordering.\n• DFS (depth-first search) — iterative DFS uses an explicit stack.\n• Parsing: balancing brackets, evaluating expressions, syntax parsing.\n• Undo/redo functionality — each action is pushed; undo pops.\n• Call stack simulation, backtracking algorithms.\n\nAVOID stacks when:\n• You need FIFO ordering — use a queue.\n• You need random access by index — use an array.\n• You need to search or access arbitrary elements — use a hash table or array.\n• You need to process items in sorted/priority order — use a heap.",
+  },
+  {
+    id: "stk-4",
+    topic: "stacks",
+    difficulty: "beginner",
+    question: "What data structures can be used to implement a stack?",
+    answer:
+      "Two common options:\n\n1. Array (most common)\n   • Push = append to end: O(1) amortized.\n   • Pop = remove from end: O(1).\n   • Cache-friendly; simple to implement.\n   • Dynamic arrays resize automatically (e.g., JavaScript array, Python list).\n\n2. Linked List\n   • Push = prepend a new node at the head: O(1).\n   • Pop = unlink the head node: O(1).\n   • No resizing ever needed; each node allocated independently.\n   • Slightly more memory due to pointer overhead.\n\nBoth give O(1) push, pop, and peek. Prefer arrays unless you have a strong reason to avoid resizing (e.g., real-time systems where latency spikes matter).",
+  },
 ];
 
 // Compute card counts per topic
