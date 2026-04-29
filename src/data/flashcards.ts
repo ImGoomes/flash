@@ -3761,6 +3761,818 @@ def reverse_string(s):
     answer:
       "Two common options:\n\n1. Array (most common)\n   • Push = append to end: O(1) amortized.\n   • Pop = remove from end: O(1).\n   • Cache-friendly; simple to implement.\n   • Dynamic arrays resize automatically (e.g., JavaScript array, Python list).\n\n2. Linked List\n   • Push = prepend a new node at the head: O(1).\n   • Pop = unlink the head node: O(1).\n   • No resizing ever needed; each node allocated independently.\n   • Slightly more memory due to pointer overhead.\n\nBoth give O(1) push, pop, and peek. Prefer arrays unless you have a strong reason to avoid resizing (e.g., real-time systems where latency spikes matter).",
   },
+
+  // ─── DESIGN PATTERNS (GoF) ────────────────────────────────────
+  // Cards: code in Python → identify the pattern + explain its goal
+  {
+    id: "gof-1",
+    topic: "design-patterns",
+    difficulty: "beginner",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Singleton (Creational)\n\nGoal: Ensure a class has only one instance and provide a global access point to it.\n\nThe metaclass overrides __call__ so the first instantiation stores the object in _instances; every subsequent call returns the cached instance. Common uses: loggers, config managers, connection pools.",
+    codeSnippet: `class SingletonMeta(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class Logger(metaclass=SingletonMeta):
+    def log(self, msg: str) -> None:
+        print(msg)
+
+
+a = Logger()
+b = Logger()
+assert a is b  # same object`,
+    language: "python",
+  },
+  {
+    id: "gof-2",
+    topic: "design-patterns",
+    difficulty: "beginner",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Factory Method (Creational)\n\nGoal: Define an interface for creating an object, but let subclasses decide which class to instantiate. The creator never specifies the exact class of the product.\n\nEach Dialog subclass overrides create_button() and returns a different Button type. The parent's render() method works with any button through the common interface.",
+    codeSnippet: `from abc import ABC, abstractmethod
+
+class Button(ABC):
+    @abstractmethod
+    def render(self) -> str: ...
+
+class WindowsButton(Button):
+    def render(self) -> str:
+        return "<WinButton />"
+
+class WebButton(Button):
+    def render(self) -> str:
+        return "<button />"
+
+class Dialog(ABC):
+    @abstractmethod
+    def create_button(self) -> Button: ...  # factory method
+
+    def render_dialog(self) -> str:
+        btn = self.create_button()
+        return btn.render()
+
+class WindowsDialog(Dialog):
+    def create_button(self) -> Button:
+        return WindowsButton()
+
+class WebDialog(Dialog):
+    def create_button(self) -> Button:
+        return WebButton()`,
+    language: "python",
+  },
+  {
+    id: "gof-3",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Abstract Factory (Creational)\n\nGoal: Provide an interface for creating families of related objects without specifying their concrete classes.\n\nEach concrete factory (DarkThemeFactory, LightThemeFactory) produces a matched family of widgets. Swapping the factory changes the entire UI theme at once, guaranteeing that all components belong to the same family.",
+    codeSnippet: `from abc import ABC, abstractmethod
+
+class Button(ABC):
+    @abstractmethod
+    def paint(self) -> str: ...
+
+class Checkbox(ABC):
+    @abstractmethod
+    def paint(self) -> str: ...
+
+class GUIFactory(ABC):
+    @abstractmethod
+    def create_button(self) -> Button: ...
+    @abstractmethod
+    def create_checkbox(self) -> Checkbox: ...
+
+class DarkButton(Button):
+    def paint(self) -> str: return "dark button"
+
+class DarkCheckbox(Checkbox):
+    def paint(self) -> str: return "dark checkbox"
+
+class DarkThemeFactory(GUIFactory):
+    def create_button(self) -> Button: return DarkButton()
+    def create_checkbox(self) -> Checkbox: return DarkCheckbox()
+
+def build_ui(factory: GUIFactory) -> None:
+    btn = factory.create_button()
+    chk = factory.create_checkbox()
+    print(btn.paint(), chk.paint())`,
+    language: "python",
+  },
+  {
+    id: "gof-4",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Builder (Creational)\n\nGoal: Separate the construction of a complex object from its representation, enabling the same process to produce different results.\n\nThe fluent API (method chaining with return self) lets callers compose only the parts they need, avoiding constructors with many optional parameters. The director is optional — callers can drive the builder directly.",
+    codeSnippet: `class Query:
+    def __init__(self):
+        self.table = ""
+        self.conditions: list[str] = []
+        self.limit: int | None = None
+
+class QueryBuilder:
+    def __init__(self):
+        self._query = Query()
+
+    def from_table(self, table: str) -> "QueryBuilder":
+        self._query.table = table
+        return self
+
+    def where(self, condition: str) -> "QueryBuilder":
+        self._query.conditions.append(condition)
+        return self
+
+    def take(self, n: int) -> "QueryBuilder":
+        self._query.limit = n
+        return self
+
+    def build(self) -> Query:
+        return self._query
+
+query = (
+    QueryBuilder()
+    .from_table("users")
+    .where("age > 18")
+    .take(10)
+    .build()
+)`,
+    language: "python",
+  },
+  {
+    id: "gof-5",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Prototype (Creational)\n\nGoal: Create new objects by copying an existing object (the prototype), avoiding the cost of building from scratch.\n\ncopy.deepcopy() clones all nested attributes, so each clone is fully independent. Useful when object creation is expensive (e.g., requires a DB query) and a copy is cheaper.",
+    codeSnippet: `import copy
+
+class DatabaseConfig:
+    def __init__(self, host: str, port: int, options: dict):
+        self.host = host
+        self.port = port
+        self.options = options  # nested mutable state
+
+    def clone(self) -> "DatabaseConfig":
+        return copy.deepcopy(self)
+
+
+base = DatabaseConfig("localhost", 5432, {"pool": 5, "timeout": 30})
+
+replica = base.clone()
+replica.host = "replica.db"
+replica.options["pool"] = 2
+
+print(base.host)           # localhost  (unchanged)
+print(replica.host)        # replica.db
+print(base.options["pool"]) # 5         (unchanged)`,
+    language: "python",
+  },
+  {
+    id: "gof-6",
+    topic: "design-patterns",
+    difficulty: "beginner",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Adapter (Structural)\n\nGoal: Convert the interface of a class into another interface that clients expect. It lets incompatible interfaces work together.\n\nLegacyPayment has charge(), but the checkout flow expects process(). PaymentAdapter wraps the legacy object and translates the call, so existing code stays untouched.",
+    codeSnippet: `class LegacyPayment:
+    """Third-party library we cannot modify."""
+    def charge(self, amount_cents: int) -> bool:
+        print(f"Charging {amount_cents} cents")
+        return True
+
+class PaymentProcessor:
+    """Interface our checkout code expects."""
+    def process(self, amount_usd: float) -> bool: ...
+
+class PaymentAdapter(PaymentProcessor):
+    def __init__(self, legacy: LegacyPayment):
+        self._legacy = legacy
+
+    def process(self, amount_usd: float) -> bool:
+        cents = int(amount_usd * 100)
+        return self._legacy.charge(cents)
+
+processor: PaymentProcessor = PaymentAdapter(LegacyPayment())
+processor.process(9.99)  # Charging 999 cents`,
+    language: "python",
+  },
+  {
+    id: "gof-7",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Decorator (Structural)\n\nGoal: Attach additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality.\n\nEach wrapper implements the same TextProcessor interface and delegates to the inner object, adding one behaviour (trim, uppercase). Stacking decorators composes behaviours without modifying any class.",
+    codeSnippet: `from abc import ABC, abstractmethod
+
+class TextProcessor(ABC):
+    @abstractmethod
+    def process(self, text: str) -> str: ...
+
+class PlainText(TextProcessor):
+    def process(self, text: str) -> str:
+        return text
+
+class TrimDecorator(TextProcessor):
+    def __init__(self, wrapped: TextProcessor):
+        self._wrapped = wrapped
+    def process(self, text: str) -> str:
+        return self._wrapped.process(text).strip()
+
+class UpperDecorator(TextProcessor):
+    def __init__(self, wrapped: TextProcessor):
+        self._wrapped = wrapped
+    def process(self, text: str) -> str:
+        return self._wrapped.process(text).upper()
+
+pipeline = UpperDecorator(TrimDecorator(PlainText()))
+print(pipeline.process("  hello world  "))  # "HELLO WORLD"`,
+    language: "python",
+  },
+  {
+    id: "gof-8",
+    topic: "design-patterns",
+    difficulty: "beginner",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Facade (Structural)\n\nGoal: Provide a simplified interface to a complex subsystem. The facade hides internal complexity and exposes only what clients need.\n\nVideoConverter hides four subsystem classes behind a single convert() method. Clients don't need to know about codecs, readers, or mixers.",
+    codeSnippet: `class VideoFile:
+    def __init__(self, name: str): self.name = name
+
+class CodecFactory:
+    def extract(self, file: VideoFile) -> str:
+        return "ogg_codec"
+
+class BitrateReader:
+    def read(self, file: VideoFile, codec: str) -> bytes:
+        return b"raw_data"
+
+class AudioMixer:
+    def fix(self, data: bytes) -> bytes:
+        return data
+
+class VideoConverter:
+    """Facade — single entry point for video conversion."""
+    def convert(self, filename: str, target_format: str) -> bytes:
+        file    = VideoFile(filename)
+        codec   = CodecFactory().extract(file)
+        buffer  = BitrateReader().read(file, codec)
+        result  = AudioMixer().fix(buffer)
+        return result
+
+# Client uses one method instead of four subsystem classes
+mp4 = VideoConverter().convert("funny.ogg", "mp4")`,
+    language: "python",
+  },
+  {
+    id: "gof-9",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Proxy (Structural)\n\nGoal: Provide a surrogate that controls access to another object. The proxy intercepts calls and can add caching, access control, logging, or lazy initialisation.\n\nCachingProxy stores results in a dict so the expensive RealService.fetch() is called only once per key. The client code is unaware it is talking to a proxy.",
+    codeSnippet: `from abc import ABC, abstractmethod
+
+class Service(ABC):
+    @abstractmethod
+    def fetch(self, key: str) -> str: ...
+
+class RealService(Service):
+    def fetch(self, key: str) -> str:
+        print(f"[DB] fetching {key}")   # expensive
+        return f"data:{key}"
+
+class CachingProxy(Service):
+    def __init__(self, real: RealService):
+        self._real  = real
+        self._cache: dict[str, str] = {}
+
+    def fetch(self, key: str) -> str:
+        if key not in self._cache:
+            self._cache[key] = self._real.fetch(key)
+        return self._cache[key]
+
+svc: Service = CachingProxy(RealService())
+print(svc.fetch("user:1"))  # [DB] fetching user:1 → data:user:1
+print(svc.fetch("user:1"))  # cache hit, no DB call`,
+    language: "python",
+  },
+  {
+    id: "gof-10",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Composite (Structural)\n\nGoal: Compose objects into tree structures to represent part-whole hierarchies, and let clients treat individual objects and compositions uniformly.\n\nBoth File (leaf) and Folder (composite) implement get_size(). The Folder delegates to its children recursively. Clients call get_size() without knowing whether they have a single file or a whole directory tree.",
+    codeSnippet: `from abc import ABC, abstractmethod
+
+class FileSystemItem(ABC):
+    @abstractmethod
+    def get_size(self) -> int: ...
+
+class File(FileSystemItem):
+    def __init__(self, name: str, size: int):
+        self.name = name
+        self._size = size
+
+    def get_size(self) -> int:
+        return self._size
+
+class Folder(FileSystemItem):
+    def __init__(self, name: str):
+        self.name = name
+        self._children: list[FileSystemItem] = []
+
+    def add(self, item: FileSystemItem) -> None:
+        self._children.append(item)
+
+    def get_size(self) -> int:
+        return sum(c.get_size() for c in self._children)
+
+root = Folder("root")
+root.add(File("a.txt", 100))
+sub  = Folder("docs")
+sub.add(File("b.pdf", 500))
+root.add(sub)
+print(root.get_size())  # 600`,
+    language: "python",
+  },
+  {
+    id: "gof-11",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Bridge (Structural)\n\nGoal: Decouple an abstraction from its implementation so the two can vary independently.\n\nShape (abstraction) holds a reference to Renderer (implementation). New shapes or new renderers can be added without changing each other. This avoids the class explosion that inheritance would cause (e.g., SVGCircle, CanvasCircle, SVGRect, CanvasRect…).",
+    codeSnippet: `from abc import ABC, abstractmethod
+
+class Renderer(ABC):
+    @abstractmethod
+    def draw_circle(self, radius: float) -> None: ...
+
+class SVGRenderer(Renderer):
+    def draw_circle(self, radius: float) -> None:
+        print(f"<circle r='{radius}' />")
+
+class CanvasRenderer(Renderer):
+    def draw_circle(self, radius: float) -> None:
+        print(f"ctx.arc(0, 0, {radius})")
+
+class Shape(ABC):
+    def __init__(self, renderer: Renderer):
+        self.renderer = renderer
+    @abstractmethod
+    def draw(self) -> None: ...
+
+class Circle(Shape):
+    def __init__(self, renderer: Renderer, radius: float):
+        super().__init__(renderer)
+        self.radius = radius
+    def draw(self) -> None:
+        self.renderer.draw_circle(self.radius)
+
+Circle(SVGRenderer(), 5).draw()    # <circle r='5' />
+Circle(CanvasRenderer(), 5).draw() # ctx.arc(0, 0, 5)`,
+    language: "python",
+  },
+  {
+    id: "gof-12",
+    topic: "design-patterns",
+    difficulty: "advanced",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Flyweight (Structural)\n\nGoal: Use sharing to efficiently support a large number of fine-grained objects by separating intrinsic state (shared, stored inside the flyweight) from extrinsic state (context-specific, passed in by the client).\n\nTreeType holds the heavy texture data and is shared across all trees of the same kind. Coordinates are extrinsic — passed to draw() each time. The factory ensures only one TreeType per (name, texture) pair is ever created.",
+    codeSnippet: `class TreeType:
+    """Flyweight — intrinsic (shared) state."""
+    def __init__(self, name: str, texture: str):
+        self.name    = name
+        self.texture = texture  # heavy data
+
+    def draw(self, x: int, y: int) -> None:
+        print(f"Draw {self.name} at ({x},{y}) tex={self.texture}")
+
+class TreeFactory:
+    _cache: dict[tuple, TreeType] = {}
+
+    @classmethod
+    def get(cls, name: str, texture: str) -> TreeType:
+        key = (name, texture)
+        if key not in cls._cache:
+            cls._cache[key] = TreeType(name, texture)
+        return cls._cache[key]
+
+# Millions of trees share just a few TreeType instances
+oak = TreeFactory.get("Oak", "oak.png")
+oak.draw(10, 20)  # extrinsic state passed in
+oak.draw(50, 80)  # same flyweight, different coordinates`,
+    language: "python",
+  },
+  {
+    id: "gof-13",
+    topic: "design-patterns",
+    difficulty: "beginner",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Observer (Behavioural)\n\nGoal: Define a one-to-many dependency so that when the subject changes state, all registered observers are notified automatically.\n\nEventBus is the subject; objects that call subscribe() are observers. emit() fans out to every listener. This decouples the producer from its consumers — neither needs to know about the other directly.",
+    codeSnippet: `from collections import defaultdict
+from typing import Callable
+
+class EventBus:
+    def __init__(self):
+        self._listeners: dict[str, list[Callable]] = defaultdict(list)
+
+    def subscribe(self, event: str, fn: Callable) -> None:
+        self._listeners[event].append(fn)
+
+    def emit(self, event: str, data=None) -> None:
+        for fn in self._listeners[event]:
+            fn(data)
+
+bus = EventBus()
+bus.subscribe("user.created", lambda d: print(f"Send welcome email to {d}"))
+bus.subscribe("user.created", lambda d: print(f"Init profile for {d}"))
+
+bus.emit("user.created", "alice@example.com")
+# Send welcome email to alice@example.com
+# Init profile for alice@example.com`,
+    language: "python",
+  },
+  {
+    id: "gof-14",
+    topic: "design-patterns",
+    difficulty: "beginner",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Strategy (Behavioural)\n\nGoal: Define a family of algorithms, encapsulate each one, and make them interchangeable. The client selects the algorithm at runtime without changing the code that uses it.\n\nSorter holds a strategy object and delegates to it. Swapping the strategy changes the sort algorithm without touching Sorter itself.",
+    codeSnippet: `from abc import ABC, abstractmethod
+
+class SortStrategy(ABC):
+    @abstractmethod
+    def sort(self, data: list[int]) -> list[int]: ...
+
+class BubbleSort(SortStrategy):
+    def sort(self, data: list[int]) -> list[int]:
+        d = data[:]
+        for i in range(len(d)):
+            for j in range(len(d) - i - 1):
+                if d[j] > d[j + 1]:
+                    d[j], d[j + 1] = d[j + 1], d[j]
+        return d
+
+class PythonSort(SortStrategy):
+    def sort(self, data: list[int]) -> list[int]:
+        return sorted(data)
+
+class Sorter:
+    def __init__(self, strategy: SortStrategy):
+        self._strategy = strategy
+
+    def set_strategy(self, strategy: SortStrategy) -> None:
+        self._strategy = strategy
+
+    def sort(self, data: list[int]) -> list[int]:
+        return self._strategy.sort(data)
+
+sorter = Sorter(PythonSort())
+print(sorter.sort([3, 1, 4, 1, 5]))  # [1, 1, 3, 4, 5]`,
+    language: "python",
+  },
+  {
+    id: "gof-15",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Command (Behavioural)\n\nGoal: Encapsulate a request as an object, allowing you to parameterise clients, queue requests, log them, and support undoable operations.\n\nEach command stores both the action (execute) and its reversal (undo). The editor keeps a history stack, enabling undo simply by popping and calling undo().",
+    codeSnippet: `from abc import ABC, abstractmethod
+
+class Command(ABC):
+    @abstractmethod
+    def execute(self) -> None: ...
+    @abstractmethod
+    def undo(self) -> None: ...
+
+class TextEditor:
+    def __init__(self): self.content = ""
+    def append(self, text: str) -> None: self.content += text
+    def delete_last(self, n: int)  -> None: self.content = self.content[:-n]
+
+class AppendCommand(Command):
+    def __init__(self, editor: TextEditor, text: str):
+        self._editor = editor
+        self._text   = text
+    def execute(self) -> None: self._editor.append(self._text)
+    def undo(self)    -> None: self._editor.delete_last(len(self._text))
+
+history: list[Command] = []
+
+editor = TextEditor()
+cmd = AppendCommand(editor, "Hello")
+cmd.execute(); history.append(cmd)
+print(editor.content)  # Hello
+
+cmd2 = AppendCommand(editor, " World")
+cmd2.execute(); history.append(cmd2)
+print(editor.content)  # Hello World
+
+history.pop().undo()
+print(editor.content)  # Hello`,
+    language: "python",
+  },
+  {
+    id: "gof-16",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Template Method (Behavioural)\n\nGoal: Define the skeleton of an algorithm in a base class, deferring some steps to subclasses. Subclasses can override specific steps without changing the overall algorithm structure.\n\nparse() in DataParser is the template method — it calls read_data, parse_data, and validate in order. Subclasses only override parse_data, keeping the rest invariant.",
+    codeSnippet: `from abc import ABC, abstractmethod
+
+class DataParser(ABC):
+    def parse(self, raw: str) -> list[dict]:
+        """Template method — defines the algorithm skeleton."""
+        data      = self._read(raw)
+        records   = self._parse(data)
+        validated = self._validate(records)
+        return validated
+
+    def _read(self, raw: str) -> str:
+        return raw.strip()
+
+    @abstractmethod
+    def _parse(self, data: str) -> list[dict]: ...
+
+    def _validate(self, records: list[dict]) -> list[dict]:
+        return [r for r in records if r]
+
+import json, csv, io
+
+class JSONParser(DataParser):
+    def _parse(self, data: str) -> list[dict]:
+        return json.loads(data)
+
+class CSVParser(DataParser):
+    def _parse(self, data: str) -> list[dict]:
+        return list(csv.DictReader(io.StringIO(data)))`,
+    language: "python",
+  },
+  {
+    id: "gof-17",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "State (Behavioural)\n\nGoal: Allow an object to alter its behaviour when its internal state changes. The object appears to change its class.\n\nInstead of if/elif chains checking a status field, each state is its own class. TrafficLight delegates handle() to the current state, and the state itself drives the transition by calling set_state().",
+    codeSnippet: `from abc import ABC, abstractmethod
+
+class TrafficLight:
+    def __init__(self):
+        self._state: "LightState" = RedState(self)
+
+    def set_state(self, state: "LightState") -> None:
+        self._state = state
+
+    def next(self) -> None:
+        self._state.next()
+
+    def color(self) -> str:
+        return self._state.color()
+
+class LightState(ABC):
+    def __init__(self, light: TrafficLight): self._light = light
+    @abstractmethod
+    def next(self) -> None: ...
+    @abstractmethod
+    def color(self) -> str: ...
+
+class RedState(LightState):
+    def color(self) -> str: return "red"
+    def next(self) -> None: self._light.set_state(GreenState(self._light))
+
+class GreenState(LightState):
+    def color(self) -> str: return "green"
+    def next(self) -> None: self._light.set_state(YellowState(self._light))
+
+class YellowState(LightState):
+    def color(self) -> str: return "yellow"
+    def next(self) -> None: self._light.set_state(RedState(self._light))
+
+light = TrafficLight()
+for _ in range(4):
+    print(light.color()); light.next()
+# red → green → yellow → red`,
+    language: "python",
+  },
+  {
+    id: "gof-18",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Chain of Responsibility (Behavioural)\n\nGoal: Pass a request along a chain of handlers. Each handler either processes the request or forwards it to the next one in the chain.\n\nEach Handler checks whether it can handle the level; if not, it delegates to self._next. This decouples the sender from the receiver and lets the chain be assembled dynamically.",
+    codeSnippet: `from __future__ import annotations
+from abc import ABC, abstractmethod
+
+class Handler(ABC):
+    def __init__(self): self._next: Handler | None = None
+
+    def set_next(self, handler: Handler) -> Handler:
+        self._next = handler
+        return handler
+
+    @abstractmethod
+    def handle(self, level: int) -> str | None: ...
+
+class DebugHandler(Handler):
+    def handle(self, level: int) -> str | None:
+        if level <= 1:
+            return f"DEBUG handled {level}"
+        return self._next.handle(level) if self._next else None
+
+class WarningHandler(Handler):
+    def handle(self, level: int) -> str | None:
+        if level <= 2:
+            return f"WARNING handled {level}"
+        return self._next.handle(level) if self._next else None
+
+class ErrorHandler(Handler):
+    def handle(self, level: int) -> str | None:
+        return f"ERROR handled {level}"
+
+debug = DebugHandler()
+debug.set_next(WarningHandler()).set_next(ErrorHandler())
+
+print(debug.handle(1))  # DEBUG handled 1
+print(debug.handle(3))  # ERROR handled 3`,
+    language: "python",
+  },
+  {
+    id: "gof-19",
+    topic: "design-patterns",
+    difficulty: "intermediate",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Mediator (Behavioural)\n\nGoal: Define an object (the mediator) that encapsulates how a set of objects interact. It promotes loose coupling by keeping objects from referring to each other explicitly.\n\nChatRoom is the mediator. Users only know about the chat room, not about each other. Adding a new user requires no changes to existing users.",
+    codeSnippet: `class ChatRoom:
+    """Mediator"""
+    def __init__(self): self._users: list["User"] = []
+
+    def join(self, user: "User") -> None:
+        self._users.append(user)
+        self.broadcast(f"{user.name} joined", sender=user)
+
+    def broadcast(self, msg: str, sender: "User") -> None:
+        for user in self._users:
+            if user is not sender:
+                user.receive(f"[{sender.name}]: {msg}")
+
+class User:
+    def __init__(self, name: str, room: ChatRoom):
+        self.name = name
+        self._room = room
+        room.join(self)
+
+    def send(self, msg: str) -> None:
+        self._room.broadcast(msg, sender=self)
+
+    def receive(self, msg: str) -> None:
+        print(msg)
+
+room = ChatRoom()
+alice = User("Alice", room)
+bob   = User("Bob",   room)
+alice.send("Hi Bob!")  # [Alice]: Hi Bob! → received by Bob`,
+    language: "python",
+  },
+  {
+    id: "gof-20",
+    topic: "design-patterns",
+    difficulty: "advanced",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Visitor (Behavioural)\n\nGoal: Separate an algorithm from the object structure it operates on. Add new operations without modifying existing element classes.\n\nThe double-dispatch trick: shape.accept(v) calls the specific v.visit_circle or v.visit_rect on the visitor. This lets you add new operations (new Visitor classes) without touching Circle or Rectangle.",
+    codeSnippet: `from abc import ABC, abstractmethod
+import math
+
+class ShapeVisitor(ABC):
+    @abstractmethod
+    def visit_circle(self, c: "Circle") -> None: ...
+    @abstractmethod
+    def visit_rect(self, r: "Rectangle") -> None: ...
+
+class Shape(ABC):
+    @abstractmethod
+    def accept(self, visitor: ShapeVisitor) -> None: ...
+
+class Circle(Shape):
+    def __init__(self, radius: float): self.radius = radius
+    def accept(self, v: ShapeVisitor) -> None: v.visit_circle(self)
+
+class Rectangle(Shape):
+    def __init__(self, w: float, h: float): self.w, self.h = w, h
+    def accept(self, v: ShapeVisitor) -> None: v.visit_rect(self)
+
+class AreaVisitor(ShapeVisitor):
+    def __init__(self): self.total = 0.0
+    def visit_circle(self, c: Circle) -> None:
+        self.total += math.pi * c.radius ** 2
+    def visit_rect(self, r: Rectangle) -> None:
+        self.total += r.w * r.h
+
+shapes: list[Shape] = [Circle(3), Rectangle(4, 5)]
+v = AreaVisitor()
+for s in shapes: s.accept(v)
+print(round(v.total, 2))  # 48.27`,
+    language: "python",
+  },
+  {
+    id: "gof-21",
+    topic: "design-patterns",
+    difficulty: "advanced",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Memento (Behavioural)\n\nGoal: Capture and externalise an object's internal state so it can be restored later, without violating encapsulation.\n\nEditorMemento is an opaque snapshot. The Caretaker (history list) holds mementos without inspecting them. Only Editor can read/write its own snapshots, preserving encapsulation.",
+    codeSnippet: `from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class EditorMemento:
+    content: str  # opaque snapshot — caretaker never modifies this
+
+class Editor:
+    def __init__(self): self._content = ""
+
+    def type(self, text: str) -> None:
+        self._content += text
+
+    def save(self) -> EditorMemento:
+        return EditorMemento(self._content)
+
+    def restore(self, memento: EditorMemento) -> None:
+        self._content = memento.content
+
+    def __str__(self) -> str: return self._content
+
+editor  = Editor()
+history: list[EditorMemento] = []
+
+editor.type("Hello")
+history.append(editor.save())
+
+editor.type(" World")
+history.append(editor.save())
+
+editor.type("!!!")
+print(editor)          # Hello World!!!
+
+editor.restore(history[-2])
+print(editor)          # Hello`,
+    language: "python",
+  },
+  {
+    id: "gof-22",
+    topic: "design-patterns",
+    difficulty: "advanced",
+    question: "What GoF pattern does this code implement, and what is its goal?",
+    answer:
+      "Iterator (Behavioural)\n\nGoal: Provide a way to sequentially access elements of a collection without exposing its underlying representation.\n\nImplementing __iter__ and __next__ makes the Range object compatible with Python's for loop and any code that expects an iterable. The collection's internal structure (start/end integers) is hidden from the client.",
+    codeSnippet: `class Range:
+    def __init__(self, start: int, end: int):
+        self._start = start
+        self._end   = end
+
+    def __iter__(self) -> "RangeIterator":
+        return RangeIterator(self._start, self._end)
+
+class RangeIterator:
+    def __init__(self, start: int, end: int):
+        self._current = start
+        self._end     = end
+
+    def __iter__(self) -> "RangeIterator":
+        return self
+
+    def __next__(self) -> int:
+        if self._current > self._end:
+            raise StopIteration
+        value = self._current
+        self._current += 1
+        return value
+
+for n in Range(1, 5):
+    print(n, end=" ")  # 1 2 3 4 5`,
+    language: "python",
+  },
 ];
 
 // Compute card counts per topic
